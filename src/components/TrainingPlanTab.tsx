@@ -119,7 +119,14 @@ const formatDateWithWeekday = (date: string) => {
     day: 'numeric',
   });
   const weekday = parsedDate.toLocaleDateString('ko-KR', { weekday: 'short' });
-  return `${formattedDate} (${weekday})`;
+  return `${formattedDate}(${weekday})`;
+};
+
+const formatDateRangeWithWeekday = (startDate: string, endDate: string) => {
+  const start = formatDateWithWeekday(startDate);
+  const end = formatDateWithWeekday(endDate);
+  if (!start && !end) return '-';
+  return `${start || '-'} ~ ${end || '-'}`;
 };
 
 const formatVehicleUsage = (vehicleRequest: VehicleRequest) => {
@@ -1100,7 +1107,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg border border-gray-200 p-3">
                   <div className="text-[11px] font-semibold text-gray-500">기간</div>
-                  <div className="mt-1 font-mono text-gray-900">{viewingPlan.startDate} ~ {viewingPlan.endDate}</div>
+                  <div className="mt-1 font-mono text-gray-900">{formatDateRangeWithWeekday(viewingPlan.startDate, viewingPlan.endDate)}</div>
                 </div>
                 <div className="rounded-lg border border-gray-200 p-3">
                   <div className="text-[11px] font-semibold text-gray-500">장소</div>
