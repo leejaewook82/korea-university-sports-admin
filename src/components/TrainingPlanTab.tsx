@@ -761,6 +761,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     </div>
                     <input
                       type="time"
+                      step="1800"
                       value={vehicleRequest.startTime}
                       onChange={(event) => handleVehicleRequestChange('startTime', event.target.value)}
                       aria-label="차량 사용 기간 시작 시간"
@@ -779,6 +780,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     </div>
                     <input
                       type="time"
+                      step="1800"
                       value={vehicleRequest.endTime}
                       onChange={(event) => handleVehicleRequestChange('endTime', event.target.value)}
                       aria-label="차량 사용 기간 종료 시간"
