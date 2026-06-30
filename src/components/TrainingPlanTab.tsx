@@ -112,12 +112,14 @@ const formatFileSize = (size: number) => {
 
 const formatDateWithWeekday = (date: string) => {
   if (!date) return '';
-  return new Date(`${date}T00:00:00`).toLocaleDateString('ko-KR', {
+  const parsedDate = new Date(`${date}T00:00:00`);
+  const formattedDate = parsedDate.toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-    weekday: 'short',
   });
+  const weekday = parsedDate.toLocaleDateString('ko-KR', { weekday: 'short' });
+  return `${formattedDate} (${weekday})`;
 };
 
 const formatVehicleUsage = (vehicleRequest: VehicleRequest) => {
