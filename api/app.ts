@@ -7,7 +7,8 @@ import { Athlete, ExpensePlan, TripRequest, TripReport, User } from './types';
 
 const app = express();
 
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.DATA_DIR || process.cwd();
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
@@ -34,6 +35,15 @@ app.use(express.urlencoded({ limit: '15mb', extended: true }));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 // --- API Routes ---
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'korea-university-sports-admin',
+    storage: DATA_DIR,
+    timestamp: new Date().toISOString(),
+  });
+});
 
 app.get('/api/users', (req, res) => {
   const db = getDatabase();
@@ -470,7 +480,7 @@ app.post('/api/upload', (req, res) => {
     return res.status(400).json({ error: '파일명과 base64 데이터가 필요합니다.' });
   }
   try {
-    const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+    const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(cleanBase64, 'base64');
     const safeFilename = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
     const filePath = path.join(UPLOADS_DIR, safeFilename);
