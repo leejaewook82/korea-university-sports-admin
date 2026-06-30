@@ -572,6 +572,7 @@ export default function App() {
                 activeSport={activeSport}
                 onSportChange={handleSportChange}
                 currentUser={currentUser}
+                users={users}
               />
             )}
 

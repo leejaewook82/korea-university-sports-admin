@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   CalendarDays,
   Check,
@@ -75,6 +75,7 @@ interface TrainingPlanTabProps {
   activeSport: SportType;
   onSportChange: (sport: SportType) => void;
   currentUser: User;
+  users: User[];
 }
 
 const sportLabel = (sport: SportType) => (sport === 'soccer' ? '여자축구부' : '양궁부');
@@ -85,7 +86,7 @@ const formatFileSize = (size: number) => {
   return `${(size / 1024 / 1024).toFixed(1)}MB`;
 };
 
-export default function TrainingPlanTab({ activeSport, onSportChange, currentUser }: TrainingPlanTabProps) {
+export default function TrainingPlanTab({ activeSport, onSportChange, currentUser, users }: TrainingPlanTabProps) {
   const [plans, setPlans] = useState<TrainingPlan[]>([
     {
       id: 'tp_seed_1',
@@ -163,6 +164,10 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
   const [isLoadingRegistry, setIsLoadingRegistry] = useState(false);
 
   const filteredPlans = plans.filter((plan) => plan.sport === activeSport);
+  const authorName = useMemo(() => {
+    const director = users.find((user) => user.role === 'director' && user.sport === activeSport);
+    return director?.name || `${sportLabel(activeSport)} 감독`;
+  }, [activeSport, users]);
 
   const budgetTotal = budgetItems.reduce((sum, item) => sum + item.amount, 0);
 
@@ -379,7 +384,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
         purpose: purpose.trim(),
         participants: participantsStr,
         participantList: sortedParticipants,
-        manager: manager.trim() || currentUser.name,
+        manager: authorName,
         budgetItems,
         schedule: schedule.trim(),
         note: note.trim(),
@@ -404,7 +409,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       purpose: purpose.trim(),
       participants: participantsStr,
       participantList: sortedParticipants,
-      manager: manager.trim() || currentUser.name,
+      manager: authorName,
       budgetItems,
       schedule: schedule.trim(),
       note: note.trim(),
@@ -567,8 +572,8 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
               </button>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">담당자</label>
-              <input type="text" value={manager} onChange={(event) => setManager(event.target.value)} className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600" />
+              <label className="block text-[11px] font-semibold text-gray-700 mb-1">작성자</label>
+              <input type="text" value={authorName} disabled className="w-full bg-gray-50 border border-gray-300 rounded-lg px-2.5 py-2 text-gray-600 font-medium" />
             </div>
           </div>
 
