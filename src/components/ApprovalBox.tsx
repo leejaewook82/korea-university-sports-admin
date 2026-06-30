@@ -99,7 +99,7 @@ export default function ApprovalBox({
         <h2 className="text-lg font-bold text-gray-900 flex items-center gap-1.5 font-display">
           <FileCheck className="w-5 h-5 text-crimson-700" />
           <span>결재 대기 문서함</span>
-          <span className="text-xs bg-crimson-100 text-crimson-800 font-bold px-2.5 py-0.5 rounded-full font-mono animate-pulse">
+          <span className="text-xs bg-crimson-100 text-crimson-800 font-bold px-2.5 py-0.5 rounded-full font-mono">
             {totalPending}건
           </span>
         </h2>

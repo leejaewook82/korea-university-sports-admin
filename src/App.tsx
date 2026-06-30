@@ -468,7 +468,7 @@ export default function App() {
                 <span>결재 대기 문서함</span>
               </div>
               {totalPendingInInbox > 0 && (
-                <span className="bg-crimson-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold font-mono animate-pulse">
+                <span className="bg-crimson-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold font-mono">
                   {totalPendingInInbox}
                 </span>
               )}
