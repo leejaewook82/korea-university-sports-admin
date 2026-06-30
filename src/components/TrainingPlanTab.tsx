@@ -340,27 +340,29 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
   };
 
   const openParticipantModal = async () => {
-    if (registeredUsers.length === 0 && registeredAthletes.length === 0) {
-      setIsLoadingRegistry(true);
-      try {
-        const [uRes, aRes] = await Promise.all([
-          fetch('/api/users'),
-          fetch(`/api/athletes?sport=${activeSport}`),
-        ]);
-        if (uRes.ok) {
-          const users: User[] = await uRes.json();
-          setRegisteredUsers(users.filter((u) => u.role === 'director' || u.role === 'coach'));
-        }
-        if (aRes.ok) {
-          const athletes: Athlete[] = await aRes.json();
-          setRegisteredAthletes(athletes.filter((a) => a.status === '재학'));
-        }
-      } catch {
-        setRegisteredUsers([]);
-        setRegisteredAthletes([]);
-      } finally {
-        setIsLoadingRegistry(false);
+    setIsLoadingRegistry(true);
+    setRegisteredUsers([]);
+    setRegisteredAthletes([]);
+    try {
+      const [uRes, aRes] = await Promise.all([
+        fetch('/api/users'),
+        fetch(`/api/athletes?sport=${activeSport}`),
+      ]);
+      if (uRes.ok) {
+        const users: User[] = await uRes.json();
+        setRegisteredUsers(
+          users.filter((u) => (u.role === 'director' || u.role === 'coach') && u.sport === activeSport)
+        );
       }
+      if (aRes.ok) {
+        const athletes: Athlete[] = await aRes.json();
+        setRegisteredAthletes(athletes.filter((a) => a.sport === activeSport && a.status === '재학'));
+      }
+    } catch {
+      setRegisteredUsers([]);
+      setRegisteredAthletes([]);
+    } finally {
+      setIsLoadingRegistry(false);
     }
     const currentIds = new Set(participants.map((p) => p.id));
     setSelectedParticipantIds(currentIds);
