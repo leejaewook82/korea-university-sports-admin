@@ -19,6 +19,8 @@ import {
 import { Athlete, SportType, User } from '../types';
 
 type PlanType = '훈련' | '대회';
+type VehicleType = '대형버스' | '중형버스' | '기타';
+type DayPeriod = '오전' | '오후';
 
 interface PlanAttachment {
   id: string;
@@ -46,6 +48,16 @@ interface BudgetItem {
   justification: string;
 }
 
+interface VehicleRequest {
+  type: VehicleType;
+  startDate: string;
+  startPeriod: DayPeriod;
+  startTime: string;
+  endDate: string;
+  endPeriod: DayPeriod;
+  endTime: string;
+}
+
 interface TrainingPlan {
   id: string;
   sport: SportType;
@@ -60,6 +72,7 @@ interface TrainingPlan {
   manager: string;
   budgetItems: BudgetItem[];
   schedule: string;
+  vehicleRequest: VehicleRequest;
   note: string;
   attachments: PlanAttachment[];
   createdBy: string;
@@ -70,6 +83,18 @@ interface TrainingPlan {
 }
 
 const BUDGET_CATEGORIES: BudgetItem['category'][] = ['식비', '숙박비', '인건비', '기타경비'];
+const VEHICLE_TYPES: VehicleType[] = ['대형버스', '중형버스', '기타'];
+const DAY_PERIODS: DayPeriod[] = ['오전', '오후'];
+
+const DEFAULT_VEHICLE_REQUEST: VehicleRequest = {
+  type: '대형버스',
+  startDate: '',
+  startPeriod: '오전',
+  startTime: '',
+  endDate: '',
+  endPeriod: '오후',
+  endTime: '',
+};
 
 const TITLE_OPTIONS: Record<PlanType, string[]> = {
   훈련: ['자체 훈련', '전지 훈련'],
@@ -89,6 +114,32 @@ const formatFileSize = (size: number) => {
   if (size < 1024) return `${size}B`;
   if (size < 1024 * 1024) return `${Math.round(size / 1024)}KB`;
   return `${(size / 1024 / 1024).toFixed(1)}MB`;
+};
+
+const formatDateWithWeekday = (date: string) => {
+  if (!date) return '';
+  return new Date(`${date}T00:00:00`).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+};
+
+const formatVehicleUsage = (vehicleRequest: VehicleRequest) => {
+  const start = [
+    formatDateWithWeekday(vehicleRequest.startDate),
+    vehicleRequest.startPeriod,
+    vehicleRequest.startTime,
+  ].filter(Boolean).join(' ');
+  const end = [
+    formatDateWithWeekday(vehicleRequest.endDate),
+    vehicleRequest.endPeriod,
+    vehicleRequest.endTime,
+  ].filter(Boolean).join(' ');
+
+  if (!start && !end) return '-';
+  return `${start || '-'} ~ ${end || '-'}`;
 };
 
 export default function TrainingPlanTab({ activeSport, onSportChange, currentUser, users }: TrainingPlanTabProps) {
@@ -112,6 +163,15 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
         { id: 'bi_4', category: '기타경비', amount: 375000, justification: '차량 대여 250,000원, 의료용품 125,000원' },
       ],
       schedule: '오전 체력 훈련 / 오후 전술 훈련 / 야간 회복 프로그램',
+      vehicleRequest: {
+        type: '대형버스',
+        startDate: '2026-07-15',
+        startPeriod: '오전',
+        startTime: '08:00',
+        endDate: '2026-07-19',
+        endPeriod: '오후',
+        endTime: '18:00',
+      },
       note: '목업 데이터',
       attachments: [],
       createdBy: 'admin@ku.ac.kr',
@@ -137,6 +197,15 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
         { id: 'bi_8', category: '기타경비', amount: 280000, justification: '차량 렌트 200,000원, 참가비 80,000원' },
       ],
       schedule: '이동 및 공식 연습 / 예선전 / 본선전 / 복귀',
+      vehicleRequest: {
+        type: '중형버스',
+        startDate: '2026-08-03',
+        startPeriod: '오전',
+        startTime: '09:00',
+        endDate: '2026-08-06',
+        endPeriod: '오후',
+        endTime: '17:00',
+      },
       note: '목업 데이터',
       attachments: [],
       createdBy: 'admin@ku.ac.kr',
@@ -154,6 +223,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
   const [manager, setManager] = useState(currentUser.name);
   const [schedule, setSchedule] = useState('');
   const [note, setNote] = useState('');
+  const [vehicleRequest, setVehicleRequest] = useState<VehicleRequest>({ ...DEFAULT_VEHICLE_REQUEST });
   const [attachments, setAttachments] = useState<PlanAttachment[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([
     { id: 'bi_new_1', category: '식비', amount: 0, justification: '' },
@@ -202,6 +272,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     setBudgetItems(plan.budgetItems.map((item) => ({ ...item })));
     setSchedule(plan.schedule);
     setNote(plan.note);
+    setVehicleRequest({ ...(plan.vehicleRequest || DEFAULT_VEHICLE_REQUEST) });
     setAttachments(plan.attachments);
     setErrorMsg('');
     setEditingPlan(plan);
@@ -225,6 +296,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     ]);
     setSchedule('');
     setNote('');
+    setVehicleRequest({ ...DEFAULT_VEHICLE_REQUEST });
     setAttachments([]);
     setErrorMsg('');
     setEditingPlan(null);
@@ -271,6 +343,10 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
         )
       );
     }
+  };
+
+  const handleVehicleRequestChange = <K extends keyof VehicleRequest>(field: K, value: VehicleRequest[K]) => {
+    setVehicleRequest((prev) => ({ ...prev, [field]: value }));
   };
 
   const openParticipantModal = async () => {
@@ -396,6 +472,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
         manager: authorName,
         budgetItems,
         schedule: schedule.trim(),
+        vehicleRequest,
         note: note.trim(),
         attachments,
       };
@@ -421,6 +498,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       manager: authorName,
       budgetItems,
       schedule: schedule.trim(),
+      vehicleRequest,
       note: note.trim(),
       attachments,
       approvalStatus: 'pending',
@@ -665,12 +743,90 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <label className="block text-[11px] font-semibold text-gray-700 mb-1">비고</label>
-              <input type="text" value={note} onChange={(event) => setNote(event.target.value)} placeholder="추가 안내 사항" className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600" />
+            <div className="text-xs space-y-2">
+              <label className="block text-[11px] font-semibold text-gray-700">차량 신청</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">차량 종류</label>
+                  <select
+                    value={vehicleRequest.type}
+                    onChange={(event) => handleVehicleRequestChange('type', event.target.value as VehicleType)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                  >
+                    {VEHICLE_TYPES.map((vehicleType) => (
+                      <option key={vehicleType} value={vehicleType}>{vehicleType}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">시작일</label>
+                  <input
+                    type="date"
+                    value={vehicleRequest.startDate}
+                    onChange={(event) => handleVehicleRequestChange('startDate', event.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                  />
+                  <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.startDate)}</div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">시작 시간</label>
+                  <div className="grid grid-cols-[72px_1fr] gap-2">
+                    <select
+                      value={vehicleRequest.startPeriod}
+                      onChange={(event) => handleVehicleRequestChange('startPeriod', event.target.value as DayPeriod)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      {DAY_PERIODS.map((period) => (
+                        <option key={period} value={period}>{period}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="time"
+                      value={vehicleRequest.startTime}
+                      onChange={(event) => handleVehicleRequestChange('startTime', event.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">종료일</label>
+                  <input
+                    type="date"
+                    value={vehicleRequest.endDate}
+                    onChange={(event) => handleVehicleRequestChange('endDate', event.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                  />
+                  <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.endDate)}</div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">종료 시간</label>
+                  <div className="grid grid-cols-[72px_1fr] gap-2">
+                    <select
+                      value={vehicleRequest.endPeriod}
+                      onChange={(event) => handleVehicleRequestChange('endPeriod', event.target.value as DayPeriod)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      {DAY_PERIODS.map((period) => (
+                        <option key={period} value={period}>{period}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="time"
+                      value={vehicleRequest.endTime}
+                      onChange={(event) => handleVehicleRequestChange('endTime', event.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-gray-700 mb-1">비고</label>
+                <input type="text" value={note} onChange={(event) => setNote(event.target.value)} placeholder="추가 안내 사항" className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600" />
+              </div>
+            </div>
 
           {participants.length > 0 && (
             <div className="text-xs space-y-1.5">
@@ -1034,6 +1190,20 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     </tr>
                   </tbody>
                 </table>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 p-3">
+                <div className="text-[11px] font-semibold text-gray-500">차량 신청</div>
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] text-gray-500">차량 종류</div>
+                    <div className="mt-0.5 font-bold text-gray-900">{viewingPlan.vehicleRequest?.type || '-'}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-gray-500">사용 일시</div>
+                    <div className="mt-0.5 text-gray-900">{formatVehicleUsage(viewingPlan.vehicleRequest || DEFAULT_VEHICLE_REQUEST)}</div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
