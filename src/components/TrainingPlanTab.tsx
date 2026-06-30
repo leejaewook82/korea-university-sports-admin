@@ -802,7 +802,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-sm font-bold text-gray-900">{sportLabel(activeSport)} 계획서 목록</span>
+          <span className="text-sm font-bold text-gray-900">목록</span>
           <span className="text-xs text-gray-500 font-mono">{filteredPlans.length}건</span>
         </div>
         <div className="overflow-x-auto">
