@@ -20,7 +20,6 @@ import { Athlete, SportType, User } from '../types';
 
 type PlanType = '훈련' | '대회';
 type VehicleType = '대형버스' | '중형버스' | '기타';
-type DayPeriod = '오전' | '오후';
 
 interface PlanAttachment {
   id: string;
@@ -51,10 +50,8 @@ interface BudgetItem {
 interface VehicleRequest {
   type: VehicleType;
   startDate: string;
-  startPeriod: DayPeriod;
   startTime: string;
   endDate: string;
-  endPeriod: DayPeriod;
   endTime: string;
 }
 
@@ -84,15 +81,12 @@ interface TrainingPlan {
 
 const BUDGET_CATEGORIES: BudgetItem['category'][] = ['식비', '숙박비', '인건비', '기타경비'];
 const VEHICLE_TYPES: VehicleType[] = ['대형버스', '중형버스', '기타'];
-const DAY_PERIODS: DayPeriod[] = ['오전', '오후'];
 
 const DEFAULT_VEHICLE_REQUEST: VehicleRequest = {
   type: '대형버스',
   startDate: '',
-  startPeriod: '오전',
   startTime: '',
   endDate: '',
-  endPeriod: '오후',
   endTime: '',
 };
 
@@ -129,12 +123,10 @@ const formatDateWithWeekday = (date: string) => {
 const formatVehicleUsage = (vehicleRequest: VehicleRequest) => {
   const start = [
     formatDateWithWeekday(vehicleRequest.startDate),
-    vehicleRequest.startPeriod,
     vehicleRequest.startTime,
   ].filter(Boolean).join(' ');
   const end = [
     formatDateWithWeekday(vehicleRequest.endDate),
-    vehicleRequest.endPeriod,
     vehicleRequest.endTime,
   ].filter(Boolean).join(' ');
 
@@ -166,10 +158,8 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       vehicleRequest: {
         type: '대형버스',
         startDate: '2026-07-15',
-        startPeriod: '오전',
         startTime: '08:00',
         endDate: '2026-07-19',
-        endPeriod: '오후',
         endTime: '18:00',
       },
       note: '목업 데이터',
@@ -200,10 +190,8 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       vehicleRequest: {
         type: '중형버스',
         startDate: '2026-08-03',
-        startPeriod: '오전',
         startTime: '09:00',
         endDate: '2026-08-06',
-        endPeriod: '오후',
         endTime: '17:00',
       },
       note: '목업 데이터',
@@ -745,7 +733,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
 
             <div className="text-xs space-y-2">
               <label className="block text-[11px] font-semibold text-gray-700">차량 신청</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 xl:grid-cols-[180px_1fr] gap-3">
                 <div>
                   <label className="block text-[11px] font-medium text-gray-600 mb-1">차량 종류</label>
                   <select
@@ -759,61 +747,41 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">시작일</label>
-                  <input
-                    type="date"
-                    value={vehicleRequest.startDate}
-                    onChange={(event) => handleVehicleRequestChange('startDate', event.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                  />
-                  <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.startDate)}</div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">시작 시간</label>
-                  <div className="grid grid-cols-[72px_1fr] gap-2">
-                    <select
-                      value={vehicleRequest.startPeriod}
-                      onChange={(event) => handleVehicleRequestChange('startPeriod', event.target.value as DayPeriod)}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                    >
-                      {DAY_PERIODS.map((period) => (
-                        <option key={period} value={period}>{period}</option>
-                      ))}
-                    </select>
+                  <label className="block text-[11px] font-medium text-gray-600 mb-1">사용 기간</label>
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_auto_1fr_120px] gap-2 items-start">
+                    <div>
+                      <input
+                        type="date"
+                        value={vehicleRequest.startDate}
+                        onChange={(event) => handleVehicleRequestChange('startDate', event.target.value)}
+                        aria-label="차량 사용 기간 시작 날짜"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                      />
+                      <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.startDate)}</div>
+                    </div>
                     <input
                       type="time"
                       value={vehicleRequest.startTime}
                       onChange={(event) => handleVehicleRequestChange('startTime', event.target.value)}
+                      aria-label="차량 사용 기간 시작 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
                     />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">종료일</label>
-                  <input
-                    type="date"
-                    value={vehicleRequest.endDate}
-                    onChange={(event) => handleVehicleRequestChange('endDate', event.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                  />
-                  <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.endDate)}</div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-gray-600 mb-1">종료 시간</label>
-                  <div className="grid grid-cols-[72px_1fr] gap-2">
-                    <select
-                      value={vehicleRequest.endPeriod}
-                      onChange={(event) => handleVehicleRequestChange('endPeriod', event.target.value as DayPeriod)}
-                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                    >
-                      {DAY_PERIODS.map((period) => (
-                        <option key={period} value={period}>{period}</option>
-                      ))}
-                    </select>
+                    <div className="hidden md:flex h-9 items-center justify-center text-gray-400">~</div>
+                    <div>
+                      <input
+                        type="date"
+                        value={vehicleRequest.endDate}
+                        onChange={(event) => handleVehicleRequestChange('endDate', event.target.value)}
+                        aria-label="차량 사용 기간 종료 날짜"
+                        className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                      />
+                      <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.endDate)}</div>
+                    </div>
                     <input
                       type="time"
                       value={vehicleRequest.endTime}
                       onChange={(event) => handleVehicleRequestChange('endTime', event.target.value)}
+                      aria-label="차량 사용 기간 종료 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
                     />
                   </div>
@@ -1200,7 +1168,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     <div className="mt-0.5 font-bold text-gray-900">{viewingPlan.vehicleRequest?.type || '-'}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-gray-500">사용 일시</div>
+                    <div className="text-[11px] text-gray-500">사용 기간</div>
                     <div className="mt-0.5 text-gray-900">{formatVehicleUsage(viewingPlan.vehicleRequest || DEFAULT_VEHICLE_REQUEST)}</div>
                   </div>
                 </div>
