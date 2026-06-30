@@ -297,12 +297,12 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
   };
 
   const addSelectedParticipants = () => {
-    const newParticipants: PlanParticipant[] = [];
+    const nextParticipants: PlanParticipant[] = [];
 
     registeredUsers.forEach((u) => {
       const pid = `p_usr_${u.id}`;
-      if (selectedParticipantIds.has(pid) && !participants.some((p) => p.id === pid)) {
-        newParticipants.push({
+      if (selectedParticipantIds.has(pid)) {
+        nextParticipants.push({
           id: pid,
           category: 'staff',
           name: u.name,
@@ -314,9 +314,9 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
 
     registeredAthletes.forEach((a) => {
       const pid = `p_ath_${a.id}`;
-      if (selectedParticipantIds.has(pid) && !participants.some((p) => p.id === pid)) {
+      if (selectedParticipantIds.has(pid)) {
         const posShort = a.positionOrEvent.startsWith('GK') ? 'GK' : a.positionOrEvent.startsWith('DF') ? 'DF' : a.positionOrEvent.startsWith('MF') ? 'MF' : 'FW';
-        newParticipants.push({
+        nextParticipants.push({
           id: pid,
           category: 'athlete',
           name: a.name,
@@ -326,7 +326,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       }
     });
 
-    setParticipants((prev) => [...prev, ...newParticipants]);
+    setParticipants(sortParticipants(nextParticipants));
     setShowParticipantModal(false);
   };
 
@@ -368,9 +368,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
 
     if (editingPlan) {
       const sortedParticipants = sortParticipants(participants);
-      const staffCount = sortedParticipants.filter((p) => p.category === 'staff').length;
-      const athleteCount = sortedParticipants.filter((p) => p.category === 'athlete').length;
-      const participantsStr = `선수 ${athleteCount}명, 지도자 ${staffCount}명`;
+      const participantsStr = `${sortedParticipants.length}명`;
       const updatedPlan: TrainingPlan = {
         ...editingPlan,
         type,
@@ -394,9 +392,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     }
 
     const sortedParticipants = sortParticipants(participants);
-    const staffCount = sortedParticipants.filter((p) => p.category === 'staff').length;
-    const athleteCount = sortedParticipants.filter((p) => p.category === 'athlete').length;
-    const participantsStr = `선수 ${athleteCount}명, 지도자 ${staffCount}명`;
+    const participantsStr = `${sortedParticipants.length}명`;
     const newPlan: TrainingPlan = {
       id: `tp_${Date.now()}`,
       sport: activeSport,
@@ -556,7 +552,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
             </div>
             <div className="text-xs space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-semibold text-gray-700">훈련(대회) 참가자 명단</label>
+                <label className="block text-[11px] font-semibold text-gray-700">훈련(대회) 참가 인원</label>
                 {participants.length > 0 && (
                   <span className="text-[11px] text-gray-500 font-mono">{participants.length}명</span>
                 )}
@@ -569,25 +565,6 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                 <UserCheck className="w-4 h-4 text-crimson-700" />
                 <span className="font-semibold text-gray-800 text-xs">등록 지도자 및 선수 불러오기</span>
               </button>
-              {participants.length > 0 && (
-                <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100 max-h-48 overflow-y-auto">
-                  {sortParticipants(participants).map((p) => (
-                    <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Users className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span className="text-xs font-medium text-gray-800 truncate">{p.name}</span>
-                        <span className="text-[11px] text-gray-500 shrink-0">{p.role}</span>
-                        {p.studentInfo && (
-                          <span className="text-[11px] text-gray-400 font-mono shrink-0">{p.studentInfo}</span>
-                        )}
-                      </div>
-                      <button type="button" onClick={() => removeParticipant(p.id)} className="text-gray-400 hover:text-red-600 cursor-pointer" title="삭제">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-gray-700 mb-1">담당자</label>
@@ -667,6 +644,33 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
               <input type="text" value={note} onChange={(event) => setNote(event.target.value)} placeholder="추가 안내 사항" className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600" />
             </div>
           </div>
+
+          {participants.length > 0 && (
+            <div className="text-xs space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-semibold text-gray-700">참가 명단</label>
+                <span className="text-[11px] text-gray-500 font-mono">{participants.length}명</span>
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100 max-h-56 overflow-y-auto">
+                {sortParticipants(participants).map((p, index) => (
+                  <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 text-[11px] text-gray-400 font-mono shrink-0">{index + 1}</span>
+                      <Users className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      <span className="text-xs font-medium text-gray-800 truncate">{p.name}</span>
+                      <span className="text-[11px] text-gray-500 shrink-0">{p.role}</span>
+                      {p.studentInfo && (
+                        <span className="text-[11px] text-gray-400 font-mono shrink-0">{p.studentInfo}</span>
+                      )}
+                    </div>
+                    <button type="button" onClick={() => removeParticipant(p.id)} className="text-gray-400 hover:text-red-600 cursor-pointer" title="삭제">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="text-xs space-y-2">
             <label className="block text-[11px] font-semibold text-gray-700">붙임 파일</label>
