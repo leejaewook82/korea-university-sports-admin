@@ -2,8 +2,10 @@ import React, { useState, useCallback, useMemo } from 'react';
 import {
   CalendarDays,
   Check,
+  CheckCircle,
   ClipboardList,
   Edit2,
+  Eye,
   FileText,
   MapPin,
   Paperclip,
@@ -62,6 +64,9 @@ interface TrainingPlan {
   attachments: PlanAttachment[];
   createdBy: string;
   createdAt: string;
+  approvalStatus?: 'pending' | 'approved';
+  approvedBy?: string;
+  approvedAt?: string;
 }
 
 const BUDGET_CATEGORIES: BudgetItem['category'][] = ['식비', '숙박비', '인건비', '기타경비'];
@@ -111,6 +116,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       attachments: [],
       createdBy: 'admin@ku.ac.kr',
       createdAt: '2026-06-29',
+      approvalStatus: 'pending',
     },
     {
       id: 'tp_seed_2',
@@ -135,6 +141,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       attachments: [],
       createdBy: 'admin@ku.ac.kr',
       createdAt: '2026-06-29',
+      approvalStatus: 'pending',
     },
   ]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -156,6 +163,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
   ]);
   const [errorMsg, setErrorMsg] = useState('');
   const [editingPlan, setEditingPlan] = useState<TrainingPlan | null>(null);
+  const [viewingPlan, setViewingPlan] = useState<TrainingPlan | null>(null);
   const [participants, setParticipants] = useState<PlanParticipant[]>([]);
   const [showParticipantModal, setShowParticipantModal] = useState(false);
   const [registeredUsers, setRegisteredUsers] = useState<User[]>([]);
@@ -168,6 +176,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     const director = users.find((user) => user.role === 'director' && user.sport === activeSport);
     return director?.name || `${sportLabel(activeSport)} 감독`;
   }, [activeSport, users]);
+  const canApprove = currentUser.role === 'professor';
 
   const budgetTotal = budgetItems.reduce((sum, item) => sum + item.amount, 0);
 
@@ -414,6 +423,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       schedule: schedule.trim(),
       note: note.trim(),
       attachments,
+      approvalStatus: 'pending',
       createdBy: currentUser.email,
       createdAt: new Date().toISOString().slice(0, 10),
     };
@@ -427,6 +437,18 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     if (window.confirm('해당 참가 계획서를 삭제하시겠습니까?')) {
       setPlans((prev) => prev.filter((plan) => plan.id !== id));
     }
+  };
+
+  const handleApprovePlan = (plan: TrainingPlan) => {
+    if (!canApprove) return;
+    const approvedPlan: TrainingPlan = {
+      ...plan,
+      approvalStatus: 'approved',
+      approvedBy: currentUser.name,
+      approvedAt: new Date().toISOString(),
+    };
+    setPlans((prev) => prev.map((item) => (item.id === plan.id ? approvedPlan : item)));
+    setViewingPlan(approvedPlan);
   };
 
   return (
@@ -891,6 +913,9 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     </td>
                     <td className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
+                        <button type="button" onClick={() => setViewingPlan(plan)} className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 hover:border-crimson-200 hover:bg-crimson-50 hover:text-crimson-700 cursor-pointer" title="보기">
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
                         <button type="button" onClick={() => openEditForm(plan)} className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-1.5 text-gray-500 hover:border-amber-200 hover:bg-amber-50 hover:text-amber-600 cursor-pointer" title="수정">
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -906,6 +931,147 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
           </table>
         </div>
       </div>
+
+      {viewingPlan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[86vh] flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-base font-bold text-gray-900">외부훈련(대회) 참가 계획서</h3>
+                <p className="text-xs text-gray-500 mt-0.5">{sportLabel(viewingPlan.sport)} · {viewingPlan.title}</p>
+              </div>
+              <button type="button" onClick={() => setViewingPlan(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
+              <div className="grid grid-cols-4 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">종목</div>
+                  <div className="mt-1 font-bold text-gray-900">{sportLabel(viewingPlan.sport)}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">구분</div>
+                  <div className="mt-1 font-bold text-gray-900">{viewingPlan.type}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">작성자</div>
+                  <div className="mt-1 font-bold text-gray-900">{viewingPlan.manager}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">결재 상태</div>
+                  <div className={`mt-1 font-bold ${viewingPlan.approvalStatus === 'approved' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                    {viewingPlan.approvalStatus === 'approved' ? '결재 완료' : '결재 대기'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">기간</div>
+                  <div className="mt-1 font-mono text-gray-900">{viewingPlan.startDate} ~ {viewingPlan.endDate}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">장소</div>
+                  <div className="mt-1 text-gray-900">{viewingPlan.location}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">참가 목적 및 내용</div>
+                  <div className="mt-1 whitespace-pre-wrap text-gray-900 leading-relaxed">{viewingPlan.purpose}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">세부 일정</div>
+                  <div className="mt-1 whitespace-pre-wrap text-gray-900 leading-relaxed">{viewingPlan.schedule || '-'}</div>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-3 py-2 bg-gray-50 text-[11px] font-semibold text-gray-600">참가자 명단</div>
+                {viewingPlan.participantList.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {sortParticipants(viewingPlan.participantList).map((participant, index) => (
+                      <div key={participant.id} className="flex items-center gap-2 px-3 py-2">
+                        <span className="w-5 text-[11px] text-gray-400 font-mono">{index + 1}</span>
+                        <span className="font-medium text-gray-900">{participant.name}</span>
+                        <span className="text-gray-500">{participant.role}</span>
+                        {participant.studentInfo && <span className="text-gray-400 font-mono">{participant.studentInfo}</span>}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-3 py-4 text-gray-400">등록된 참가자 명단이 없습니다.</div>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-3 py-2 bg-gray-50 text-[11px] font-semibold text-gray-600">소요 예산</div>
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-gray-500">
+                      <th className="px-3 py-2 text-left font-semibold">항목</th>
+                      <th className="px-3 py-2 text-right font-semibold">금액</th>
+                      <th className="px-3 py-2 text-left font-semibold">산출 근거</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {viewingPlan.budgetItems.map((item) => (
+                      <tr key={item.id}>
+                        <td className="px-3 py-2 text-gray-900">{item.category}</td>
+                        <td className="px-3 py-2 text-right font-mono text-gray-900">{item.amount.toLocaleString()}원</td>
+                        <td className="px-3 py-2 text-gray-600">{item.justification || '-'}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-50 font-bold">
+                      <td className="px-3 py-2 text-gray-900">합계</td>
+                      <td className="px-3 py-2 text-right font-mono text-gray-900">
+                        {viewingPlan.budgetItems.reduce((sum, item) => sum + item.amount, 0).toLocaleString()}원
+                      </td>
+                      <td />
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">비고</div>
+                  <div className="mt-1 text-gray-900">{viewingPlan.note || '-'}</div>
+                </div>
+                <div className="rounded-lg border border-gray-200 p-3">
+                  <div className="text-[11px] font-semibold text-gray-500">붙임 파일</div>
+                  <div className="mt-1 text-gray-900">
+                    {viewingPlan.attachments.length > 0
+                      ? viewingPlan.attachments.map((attachment) => attachment.name).join(', ')
+                      : '-'}
+                  </div>
+                </div>
+              </div>
+
+              {viewingPlan.approvalStatus === 'approved' && (
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+                  {viewingPlan.approvedBy} 님이 {viewingPlan.approvedAt ? new Date(viewingPlan.approvedAt).toLocaleString() : ''} 결재했습니다.
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-gray-200">
+              <button type="button" onClick={() => setViewingPlan(null)} className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs px-3 py-2 rounded-lg cursor-pointer">
+                닫기
+              </button>
+              {canApprove && viewingPlan.approvalStatus !== 'approved' && (
+                <button type="button" onClick={() => handleApprovePlan(viewingPlan)} className="bg-crimson-700 hover:bg-crimson-800 text-white text-xs px-4 py-2 rounded-lg font-medium flex items-center gap-1 cursor-pointer">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span>결재</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
