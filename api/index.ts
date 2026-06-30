@@ -1,6 +1,6 @@
 import path from 'path';
 import express from 'express';
-import app from '../src/app';
+import app from './app';
 
 const distPath = path.join(process.cwd(), 'dist');
 app.use(express.static(distPath));
