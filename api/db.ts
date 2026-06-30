@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { DatabaseState, User, Athlete, ExpensePlan, TripRequest, TripReport, ApprovalLine } from '../types';
+import { DatabaseState, User, Athlete, ExpensePlan, TripRequest, TripReport, ApprovalLine } from './types';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
