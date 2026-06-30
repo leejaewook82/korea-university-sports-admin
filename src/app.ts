@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { GoogleGenAI, Type } from '@google/genai';
 import { getDatabase, saveDatabase } from './server/db';
-import { Athlete, ExpensePlan, TripRequest, TripReport, User } from '../types';
+import { Athlete, ExpensePlan, TripRequest, TripReport, User } from './types';
 
 const app = express();
 
