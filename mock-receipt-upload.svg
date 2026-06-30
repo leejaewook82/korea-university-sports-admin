@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="620" viewBox="0 0 420 620">
+  <rect width="420" height="620" fill="#fffdf7"/>
+  <rect x="24" y="24" width="372" height="572" rx="14" fill="#ffffff" stroke="#d7d0c2" stroke-width="2"/>
+  <text x="210" y="78" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#111827">RECEIPT</text>
+  <text x="46" y="132" font-family="Arial, sans-serif" font-size="18" fill="#111827">Merchant: Sejong Sports Goods</text>
+  <text x="46" y="176" font-family="Arial, sans-serif" font-size="18" fill="#111827">Date: 2026-06-29</text>
+  <text x="46" y="220" font-family="Arial, sans-serif" font-size="18" fill="#111827">Payment: Hana Corporate Card 4215</text>
+  <line x1="46" y1="258" x2="374" y2="258" stroke="#d1d5db" stroke-width="2"/>
+  <text x="46" y="310" font-family="Arial, sans-serif" font-size="18" fill="#111827">Training cones and tape</text>
+  <text x="374" y="310" text-anchor="end" font-family="Arial, sans-serif" font-size="18" fill="#111827">74,500 KRW</text>
+  <line x1="46" y1="452" x2="374" y2="452" stroke="#d1d5db" stroke-width="2"/>
+  <text x="46" y="505" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#111827">TOTAL</text>
+  <text x="374" y="505" text-anchor="end" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#b91c1c">74,500 KRW</text>
+</svg>

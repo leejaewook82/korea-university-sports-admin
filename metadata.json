@@ -1,0 +1,6 @@
+{
+  "name": "고려대학교 세종캠퍼스 운동부 행정지원 시스템",
+  "description": "고려대학교 세종캠퍼스 여자축구부 및 양궁부의 선수단 관리, 훈련/대회 경비 지출 증빙, 지도자 출장 신청 및 보고를 위한 데스크탑 웹 스크린 레이아웃 행정지원 시스템 MVP",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

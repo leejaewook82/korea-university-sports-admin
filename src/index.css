@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-crimson-50: #fdf2f4;
+  --color-crimson-100: #fbe5e9;
+  --color-crimson-200: #f7ced6;
+  --color-crimson-300: #f0a3b3;
+  --color-crimson-400: #e56d8a;
+  --color-crimson-500: #d03d63;
+  --color-crimson-600: #ba284e;
+  --color-crimson-700: #861b36; /* Korea University Crimson */
+  --color-crimson-800: #6f172f;
+  --color-crimson-900: #581224;
+}
+
+/* Custom scrollbar and minor tweaks for mobile layout */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
