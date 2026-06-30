@@ -648,7 +648,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
           {participants.length > 0 && (
             <div className="text-xs space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="block text-[11px] font-semibold text-gray-700">참가 명단</label>
+                <label className="block text-[11px] font-semibold text-gray-700">참가자 명단</label>
                 <span className="text-[11px] text-gray-500 font-mono">{participants.length}명</span>
               </div>
               <div className="rounded-lg border border-gray-200 bg-white divide-y divide-gray-100 max-h-56 overflow-y-auto">
