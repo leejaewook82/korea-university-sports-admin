@@ -440,7 +440,7 @@ export default function App() {
               }`}
             >
               <Receipt className="w-4 h-4 shrink-0" />
-              <span>경비 계획 및 지출 정산</span>
+              <span>훈련(대회) 경비 지출 관리</span>
             </button>
 
             <button
