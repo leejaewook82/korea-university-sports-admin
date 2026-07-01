@@ -1019,9 +1019,9 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                     <td className="px-3 py-3 text-gray-700">
                       <div className="flex items-center gap-1">
                         <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="font-mono">{plan.startDate}</span>
+                        <span>{formatDateWithWeekday(plan.startDate)}</span>
                       </div>
-                      <div className="pl-4 font-mono text-gray-500">{plan.endDate}</div>
+                      <div className="pl-4 text-gray-500">{formatDateWithWeekday(plan.endDate)}</div>
                     </td>
                     <td className="px-3 py-3 text-gray-700">
                       <div className="flex items-center gap-1 min-w-0">
