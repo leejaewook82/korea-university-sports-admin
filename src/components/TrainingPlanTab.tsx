@@ -85,11 +85,8 @@ interface TrainingPlan {
 const BUDGET_CATEGORIES: BudgetItem['category'][] = ['식비', '숙박비', '인건비', '기타경비'];
 const VEHICLE_TYPES: VehicleType[] = ['대형버스', '중형버스', '기타'];
 const DAY_PERIODS: DayPeriod[] = ['오전', '오후'];
-const VEHICLE_TIME_OPTIONS = Array.from({ length: 25 }, (_, index) => {
-  const hour = Math.floor(index / 2);
-  const minute = index % 2 === 0 ? '00' : '30';
-  return `${String(hour).padStart(2, '0')}:${minute}`;
-});
+const VEHICLE_HOUR_OPTIONS = Array.from({ length: 13 }, (_, hour) => String(hour).padStart(2, '0'));
+const VEHICLE_MINUTE_OPTIONS = ['00', '30'];
 
 const DEFAULT_VEHICLE_REQUEST: VehicleRequest = {
   type: '대형버스',
@@ -400,6 +397,22 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
 
   const handleVehicleRequestChange = <K extends keyof VehicleRequest>(field: K, value: VehicleRequest[K]) => {
     setVehicleRequest((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleVehicleTimePartChange = (
+    field: 'startTime' | 'endTime',
+    part: 'hour' | 'minute',
+    value: string
+  ) => {
+    setVehicleRequest((prev) => {
+      const [currentHour = '', currentMinute = ''] = prev[field].split(':');
+      const nextHour = part === 'hour' ? value : currentHour;
+      const nextMinute = part === 'minute' ? value : currentMinute;
+      return {
+        ...prev,
+        [field]: nextHour || nextMinute ? `${nextHour || '00'}:${nextMinute || '00'}` : '',
+      };
+    });
   };
 
   const openParticipantModal = async () => {
@@ -815,7 +828,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-gray-600 mb-1">사용 기간</label>
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_80px_110px_auto_1fr_80px_110px] gap-2 items-start">
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_80px_86px_76px_auto_1fr_80px_86px_76px] gap-2 items-start">
                     <div>
                       <input
                         type="date"
@@ -837,14 +850,25 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                       ))}
                     </select>
                     <select
-                      value={vehicleRequest.startTime}
-                      onChange={(event) => handleVehicleRequestChange('startTime', event.target.value)}
+                      value={vehicleRequest.startTime.split(':')[0] || ''}
+                      onChange={(event) => handleVehicleTimePartChange('startTime', 'hour', event.target.value)}
                       aria-label="차량 사용 기간 시작 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
                     >
                       <option value="">시간</option>
-                      {VEHICLE_TIME_OPTIONS.map((time) => (
-                        <option key={time} value={time}>{time}</option>
+                      {VEHICLE_HOUR_OPTIONS.map((hour) => (
+                        <option key={hour} value={hour}>{hour}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={vehicleRequest.startTime.split(':')[1] || ''}
+                      onChange={(event) => handleVehicleTimePartChange('startTime', 'minute', event.target.value)}
+                      aria-label="차량 사용 기간 시작 분"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      <option value="">분</option>
+                      {VEHICLE_MINUTE_OPTIONS.map((minute) => (
+                        <option key={minute} value={minute}>{minute}</option>
                       ))}
                     </select>
                     <div className="hidden md:flex h-9 items-center justify-center text-gray-400">~</div>
@@ -869,14 +893,25 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                       ))}
                     </select>
                     <select
-                      value={vehicleRequest.endTime}
-                      onChange={(event) => handleVehicleRequestChange('endTime', event.target.value)}
+                      value={vehicleRequest.endTime.split(':')[0] || ''}
+                      onChange={(event) => handleVehicleTimePartChange('endTime', 'hour', event.target.value)}
                       aria-label="차량 사용 기간 종료 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
                     >
                       <option value="">시간</option>
-                      {VEHICLE_TIME_OPTIONS.map((time) => (
-                        <option key={time} value={time}>{time}</option>
+                      {VEHICLE_HOUR_OPTIONS.map((hour) => (
+                        <option key={hour} value={hour}>{hour}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={vehicleRequest.endTime.split(':')[1] || ''}
+                      onChange={(event) => handleVehicleTimePartChange('endTime', 'minute', event.target.value)}
+                      aria-label="차량 사용 기간 종료 분"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      <option value="">분</option>
+                      {VEHICLE_MINUTE_OPTIONS.map((minute) => (
+                        <option key={minute} value={minute}>{minute}</option>
                       ))}
                     </select>
                   </div>
