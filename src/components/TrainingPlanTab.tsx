@@ -20,6 +20,7 @@ import { Athlete, SportType, User } from '../types';
 
 type PlanType = '훈련' | '대회';
 type VehicleType = '대형버스' | '중형버스' | '기타';
+type DayPeriod = '오전' | '오후';
 
 interface PlanAttachment {
   id: string;
@@ -50,8 +51,10 @@ interface BudgetItem {
 interface VehicleRequest {
   type: VehicleType;
   startDate: string;
+  startPeriod: DayPeriod;
   startTime: string;
   endDate: string;
+  endPeriod: DayPeriod;
   endTime: string;
 }
 
@@ -81,12 +84,20 @@ interface TrainingPlan {
 
 const BUDGET_CATEGORIES: BudgetItem['category'][] = ['식비', '숙박비', '인건비', '기타경비'];
 const VEHICLE_TYPES: VehicleType[] = ['대형버스', '중형버스', '기타'];
+const DAY_PERIODS: DayPeriod[] = ['오전', '오후'];
+const VEHICLE_TIME_OPTIONS = Array.from({ length: 25 }, (_, index) => {
+  const hour = Math.floor(index / 2);
+  const minute = index % 2 === 0 ? '00' : '30';
+  return `${String(hour).padStart(2, '0')}:${minute}`;
+});
 
 const DEFAULT_VEHICLE_REQUEST: VehicleRequest = {
   type: '대형버스',
   startDate: '',
+  startPeriod: '오전',
   startTime: '',
   endDate: '',
+  endPeriod: '오후',
   endTime: '',
 };
 
@@ -129,14 +140,55 @@ const formatDateRangeWithWeekday = (startDate: string, endDate: string) => {
   return `${start || '-'} ~ ${end || '-'}`;
 };
 
+const toTwelveHourVehicleTime = (time: string, fallbackPeriod: DayPeriod) => {
+  if (!time) return { period: fallbackPeriod, time: '' };
+
+  const [hourText, minuteText = '00'] = time.split(':');
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return { period: fallbackPeriod, time };
+  }
+
+  const period: DayPeriod = hour >= 12 ? '오후' : '오전';
+  const displayHour = hour > 12 ? hour - 12 : hour;
+  const roundedMinute = minute >= 30 ? '30' : '00';
+  return {
+    period,
+    time: `${String(displayHour).padStart(2, '0')}:${roundedMinute}`,
+  };
+};
+
+const normalizeVehicleRequest = (vehicleRequest?: Partial<VehicleRequest>): VehicleRequest => {
+  const merged = { ...DEFAULT_VEHICLE_REQUEST, ...(vehicleRequest || {}) };
+  const start = vehicleRequest?.startPeriod
+    ? { period: merged.startPeriod, time: merged.startTime }
+    : toTwelveHourVehicleTime(merged.startTime, '오전');
+  const end = vehicleRequest?.endPeriod
+    ? { period: merged.endPeriod, time: merged.endTime }
+    : toTwelveHourVehicleTime(merged.endTime, '오후');
+
+  return {
+    ...merged,
+    startPeriod: start.period,
+    startTime: start.time,
+    endPeriod: end.period,
+    endTime: end.time,
+  };
+};
+
 const formatVehicleUsage = (vehicleRequest: VehicleRequest) => {
+  const normalizedVehicleRequest = normalizeVehicleRequest(vehicleRequest);
   const start = [
-    formatDateWithWeekday(vehicleRequest.startDate),
-    vehicleRequest.startTime,
+    formatDateWithWeekday(normalizedVehicleRequest.startDate),
+    normalizedVehicleRequest.startPeriod,
+    normalizedVehicleRequest.startTime,
   ].filter(Boolean).join(' ');
   const end = [
-    formatDateWithWeekday(vehicleRequest.endDate),
-    vehicleRequest.endTime,
+    formatDateWithWeekday(normalizedVehicleRequest.endDate),
+    normalizedVehicleRequest.endPeriod,
+    normalizedVehicleRequest.endTime,
   ].filter(Boolean).join(' ');
 
   if (!start && !end) return '-';
@@ -167,9 +219,11 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       vehicleRequest: {
         type: '대형버스',
         startDate: '2026-07-15',
+        startPeriod: '오전',
         startTime: '08:00',
         endDate: '2026-07-19',
-        endTime: '18:00',
+        endPeriod: '오후',
+        endTime: '06:00',
       },
       note: '목업 데이터',
       attachments: [],
@@ -199,9 +253,11 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
       vehicleRequest: {
         type: '중형버스',
         startDate: '2026-08-03',
+        startPeriod: '오전',
         startTime: '09:00',
         endDate: '2026-08-06',
-        endTime: '17:00',
+        endPeriod: '오후',
+        endTime: '05:00',
       },
       note: '목업 데이터',
       attachments: [],
@@ -269,7 +325,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
     setBudgetItems(plan.budgetItems.map((item) => ({ ...item })));
     setSchedule(plan.schedule);
     setNote(plan.note);
-    setVehicleRequest({ ...(plan.vehicleRequest || DEFAULT_VEHICLE_REQUEST) });
+    setVehicleRequest(normalizeVehicleRequest(plan.vehicleRequest || DEFAULT_VEHICLE_REQUEST));
     setAttachments(plan.attachments);
     setErrorMsg('');
     setEditingPlan(plan);
@@ -759,7 +815,7 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                 </div>
                 <div>
                   <label className="block text-[11px] font-medium text-gray-600 mb-1">사용 기간</label>
-                  <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_auto_1fr_120px] gap-2 items-start">
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_80px_110px_auto_1fr_80px_110px] gap-2 items-start">
                     <div>
                       <input
                         type="date"
@@ -770,14 +826,27 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                       />
                       <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.startDate)}</div>
                     </div>
-                    <input
-                      type="time"
-                      step="1800"
+                    <select
+                      value={vehicleRequest.startPeriod}
+                      onChange={(event) => handleVehicleRequestChange('startPeriod', event.target.value as DayPeriod)}
+                      aria-label="차량 사용 기간 시작 오전 오후"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      {DAY_PERIODS.map((period) => (
+                        <option key={period} value={period}>{period}</option>
+                      ))}
+                    </select>
+                    <select
                       value={vehicleRequest.startTime}
                       onChange={(event) => handleVehicleRequestChange('startTime', event.target.value)}
                       aria-label="차량 사용 기간 시작 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                    />
+                    >
+                      <option value="">시간</option>
+                      {VEHICLE_TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
                     <div className="hidden md:flex h-9 items-center justify-center text-gray-400">~</div>
                     <div>
                       <input
@@ -789,14 +858,27 @@ export default function TrainingPlanTab({ activeSport, onSportChange, currentUse
                       />
                       <div className="mt-1 min-h-4 text-[11px] text-gray-500">{formatDateWithWeekday(vehicleRequest.endDate)}</div>
                     </div>
-                    <input
-                      type="time"
-                      step="1800"
+                    <select
+                      value={vehicleRequest.endPeriod}
+                      onChange={(event) => handleVehicleRequestChange('endPeriod', event.target.value as DayPeriod)}
+                      aria-label="차량 사용 기간 종료 오전 오후"
+                      className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
+                    >
+                      {DAY_PERIODS.map((period) => (
+                        <option key={period} value={period}>{period}</option>
+                      ))}
+                    </select>
+                    <select
                       value={vehicleRequest.endTime}
                       onChange={(event) => handleVehicleRequestChange('endTime', event.target.value)}
                       aria-label="차량 사용 기간 종료 시간"
                       className="w-full bg-white border border-gray-300 rounded-lg px-2 py-2 focus:outline-none focus:ring-1 focus:ring-crimson-600 focus:border-crimson-600"
-                    />
+                    >
+                      <option value="">시간</option>
+                      {VEHICLE_TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>{time}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
